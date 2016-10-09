@@ -167,7 +167,12 @@ public class MaterialsMerger implements Merger{
 		setColor(src.hasColor(),src.getColor(),dst,new String[]{"Color","Diffuse"},md);
 		setTexture2D(src.hasColorMap(),src.getColorMap(),dst,new String[]{"ColorMap","DiffuseMap"},md);
 		setFloat(src.getOpacity() != 0,src.getOpacity(),dst,new String[]{"Alpha","Opacity"},md);
-		setTexture2D(src.hasOpacityMap(),src.getOpacityMap(),dst,new String[]{"AlphaMap","OpacityMap"},md);
+		if (src.hasOpacityMap() && src.hasColorMap()) {
+            		//Not setting AlphaMap if ColorMap(DiffuseMap) and OpacityMap(AlphaMap) are the same.
+            		if (!src.getColorMap().getRpath().equals(src.getOpacityMap().getRpath())) {
+              		  setTexture2D(src.hasOpacityMap(), src.getOpacityMap(), dst, new String[]{"AlphaMap", "OpacityMap"}, md);
+            		}
+        	}
 		setTexture2D(src.hasNormalMap(),src.getNormalMap(),dst,new String[]{"NormalMap"},md);
 		setFloat(src.getRoughness() != 0 ,src.getRoughness(),dst,new String[]{"Roughness"},md);
 		setTexture2D(src.hasRoughnessMap(),src.getRoughnessMap(),dst,new String[]{"RoughnessMap"},md);
@@ -187,7 +192,12 @@ public class MaterialsMerger implements Merger{
 			}
 		}
 		if ((src.getOpacity() > 0.0 && src.getOpacity() < 1.0) || src.hasOpacityMap() || (src.hasColor() && src.getColor().getA() > 0.0 && src.getColor().getA() < 1.0f)) {
-			dst.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
+			 if (src.hasOpacityMap()) {
+                		setFloat(src.getColor().getA()!=0,src.getColor().getA(), dst, new String[]{"AlphaDiscardThreshold"}, md);
+               			 //dst.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
+           		 }else if( src.getColor().getA() <1.0) {
+               			dst.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
+            		 }
 		}
 		return dst;
 	}
